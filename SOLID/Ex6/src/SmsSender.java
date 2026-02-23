@@ -1,10 +1,14 @@
+// LSP: SMS channels don't use subject — this is documented in the base contract
+// and does not violate LSP since the contract says subject is optional per channel.
 public class SmsSender extends NotificationSender {
-    public SmsSender(AuditLog audit) { super(audit); }
+    public SmsSender(AuditLog audit) {
+        super(audit);
+    }
 
     @Override
-    public void send(Notification n) {
-        // Ignores subject; base type doesn't clarify expectations (smell)
+    protected SendResult doSend(Notification n) {
         System.out.println("SMS -> to=" + n.phone + " body=" + n.body);
         audit.add("sms sent");
+        return SendResult.ok();
     }
 }

@@ -7,17 +7,20 @@ public class Main {
         Exporter csv = new CsvExporter();
         Exporter json = new JsonExporter();
 
-        System.out.println("PDF: " + safe(pdf, req));
-        System.out.println("CSV: " + safe(csv, req));
-        System.out.println("JSON: " + safe(json, req));
+        // LSP: no try-catch needed — all exporters return ExportResult consistently.
+        System.out.println("PDF: " + describe(pdf.export(req)));
+        System.out.println("CSV: " + describe(csv.export(req)));
+        System.out.println("JSON: " + describe(json.export(req)));
+
+        // Stretch goal: add new exporter without changing existing exporters
+        System.out.println();
+        Exporter xml = new XmlExporter();
+        System.out.println("XML: " + describe(xml.export(req)));
     }
 
-    private static String safe(Exporter e, ExportRequest r) {
-        try {
-            ExportResult out = e.export(r);
-            return "OK bytes=" + out.bytes.length;
-        } catch (RuntimeException ex) {
-            return "ERROR: " + ex.getMessage();
-        }
+    private static String describe(ExportResult out) {
+        if (out.isError)
+            return "ERROR: " + out.errorMessage;
+        return "OK bytes=" + out.bytes.length;
     }
 }

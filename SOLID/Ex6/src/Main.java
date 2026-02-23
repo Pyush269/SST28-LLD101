@@ -9,15 +9,21 @@ public class Main {
         NotificationSender sms = new SmsSender(audit);
         NotificationSender wa = new WhatsAppSender(audit);
 
+        // LSP: no try-catch needed — all senders return SendResult consistently.
         email.send(n);
         sms.send(n);
-        try {
-            wa.send(n);
-        } catch (RuntimeException ex) {
-            System.out.println("WA ERROR: " + ex.getMessage());
-            audit.add("WA failed");
+
+        SendResult waResult = wa.send(n);
+        if (waResult.isError) {
+            System.out.println("WA ERROR: " + waResult.errorMessage);
         }
 
+        System.out.println("AUDIT entries=" + audit.size());
+
+        // Stretch goal: new sender without changing existing ones.
+        System.out.println();
+        NotificationSender push = new PushSender(audit);
+        push.send(n);
         System.out.println("AUDIT entries=" + audit.size());
     }
 }

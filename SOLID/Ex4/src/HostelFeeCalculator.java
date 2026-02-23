@@ -1,37 +1,28 @@
-import java.util.*;
-
+// OCP: no switch/if-else. New room types and add-ons are registered in PricingRegistry — this class never changes.
 public class HostelFeeCalculator {
-    private final FakeBookingRepo repo;
+    private static final Money DEPOSIT = new Money(5000.00);
+    private static final String BOOKING_PREFIX = "H-7781"; // deterministic for test reproducibility
 
-    public HostelFeeCalculator(FakeBookingRepo repo) { this.repo = repo; }
+    private final PricingRegistry registry;
+    private final BookingStore store;
 
-    // OCP violation: switch + add-on branching + printing + persistence.
+    public HostelFeeCalculator(PricingRegistry registry, BookingStore store) {
+        this.registry = registry;
+        this.store = store;
+    }
+
     public void process(BookingRequest req) {
         Money monthly = calculateMonthly(req);
-        Money deposit = new Money(5000.00);
-
-        ReceiptPrinter.print(req, monthly, deposit);
-
-        String bookingId = "H-" + (7000 + new Random(1).nextInt(1000)); // deterministic-ish
-        repo.save(bookingId, req, monthly, deposit);
+        ReceiptPrinter.print(req, monthly, DEPOSIT);
+        store.save(BOOKING_PREFIX, req, monthly, DEPOSIT);
     }
 
     private Money calculateMonthly(BookingRequest req) {
-        double base;
-        switch (req.roomType) {
-            case LegacyRoomTypes.SINGLE -> base = 14000.0;
-            case LegacyRoomTypes.DOUBLE -> base = 15000.0;
-            case LegacyRoomTypes.TRIPLE -> base = 12000.0;
-            default -> base = 16000.0;
-        }
-
-        double add = 0.0;
+        double total = registry.roomBase(req.roomType);
         for (AddOn a : req.addOns) {
-            if (a == AddOn.MESS) add += 1000.0;
-            else if (a == AddOn.LAUNDRY) add += 500.0;
-            else if (a == AddOn.GYM) add += 300.0;
+            total += registry.addOnCost(a);
         }
-
-        return new Money(base + add);
+        return new Money(total);
     }
 }
+
