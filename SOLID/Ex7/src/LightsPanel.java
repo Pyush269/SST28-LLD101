@@ -1,0 +1,12 @@
+/**
+ * LightsPanel: supports power control and brightness.
+ * ISP: does NOT implement TemperatureControllable, AttendanceScannable, or InputConnectable.
+ */
+public class LightsPanel implements Powerable, Dimmable {
+    @Override public void powerOn()  { /* always on */ }
+    @Override public void powerOff() { System.out.println("Lights OFF"); }
+
+    @Override public void setBrightness(int pct) {
+        System.out.println("Lights set to " + pct + "%");
+    }
+}
